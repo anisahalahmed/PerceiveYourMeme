@@ -34,6 +34,7 @@ MemeInfo = TypedDict(
         "Origin": list[str],
         "Region": list[str],
         "Template urls": list[str],
+        "Body photos": dict[str, list[str]],
     },
     total=False,
 )
@@ -95,6 +96,22 @@ class MemePage:
 
                 # Store url to basic_info_dict
                 self.basic_info_dict["Template urls"] = self.org_img_urls
+                section = ""
+                photos = []
+                body_photos: dict[str, list[str]] = {}
+                for ele in entry_body.find("section", attrs={"class": "bodycopy"}).find_all(recursive=False):
+                    if ele.name == "h2":
+                        if photos:
+                            body_photos[section] = photos
+                        section = ele.text.strip()
+                        photos = []
+                    for link in ele.find_all("a"):
+                        if link["href"].startswith("/photos/") or "knowyourmeme.com/photos/" in link["href"]:
+                            photos.append(urljoin(KYM, link["href"]))
+                if photos:
+                    body_photos[section] = photos
+
+                self.basic_info_dict["Body photos"] = body_photos
             except Exception as e:
                 print(e)
                 self.org_img_urls = []
