@@ -5,6 +5,7 @@ __pycache__
 PyM-venv
 PyM-trial
 build
+test_outputs
 PerceiveYourMeme.egg-info
 .vscode
 

@@ -1,8 +1,11 @@
-from typing import cast
-import urllib3
-import bs4
+import os
+from typing import TypedDict, cast
 from urllib.parse import urljoin
-from .CONST import KYM, HEADERS, DEFAULT_DOWNLOAD_PATH
+
+import bs4
+import urllib3
+
+from .CONST import DEFAULT_DOWNLOAD_PATH, HEADERS, KYM
 from .PhotoPage import PhotoPage
 
 
@@ -16,12 +19,32 @@ def isValid(url):
         return False
 
 
+MemeInfo = TypedDict(
+    "MemeInfo",
+    {
+        "Title": str,
+        "Meme url": str,
+        "Name": str,
+        "Unit": str,
+        "Status": str,
+        "Type": str,
+        "Badge": str,
+        "Year": list[str],
+        "Tags": list[str],
+        "Origin": list[str],
+        "Region": list[str],
+        "Template urls": list[str],
+    },
+    total=False,
+)
+
+
 class MemePage:
     # An object to store basic information and template of a meme
-    def __init__(self, url):
+    def __init__(self, url: str):
         self.url = url
         if isValid(url):
-            self.basic_info_dict = {}
+            self.basic_info_dict: MemeInfo = {}
             # Store Meme url
             self.basic_info_dict["Meme url"] = url
 
@@ -33,47 +56,47 @@ class MemePage:
             response = http.request("GET", url, headers=HEADERS)
             soup = bs4.BeautifulSoup(response.data, "html.parser")
             try:
-                entry_body = soup.find("div", attrs={"class": "c", "id": "entry_body"})
+                entry_body = cast(bs4.Tag, soup.find("div", attrs={"class": "c", "id": "entry_body"}))
+                title = cast(bs4.Tag, cast(bs4.Tag, soup.find("div", attrs={"id": "maru"})).find("h1"))
 
                 # Get basic information and entry tags from entry body
-                dl = entry_body.find("dl").text.split("\n")
-                basic_info = [ele for ele in dl if ele != ""]
+                info_dl = cast(bs4.Tag, entry_body.find("dl"))
+                keys = [ele.text.strip() for ele in info_dl.find_all(["dt"])]
+                values = info_dl.find_all(["dd"])
+                basic_info = dict(zip(keys, values))
 
-                dl_entry = entry_body.find("dl", attrs={"id": "entry_tags"})
-                dl_entry = dl_entry.text.split("\n")
-                entry_tags = [ele for ele in dl_entry if ele != ""]
+                tag_dl = cast(bs4.Tag, entry_body.find("dl", attrs={"id": "entry_tags"}))
+                entry_tags: list[str] = [ele.text.strip() for ele in tag_dl.find_all("a", attrs={"data-tag": True})]
 
+                def get_text(key: str) -> str:
+                    return basic_info[key].text.strip() if key in basic_info else None
+
+                def get_list(key: str):
+                    return [ele.text.strip() for ele in basic_info[key].find_all("a")] if key in basic_info else None
+
+                self.basic_info_dict["Title"] = title.text.strip()
+                self.basic_info_dict["Status"] = get_text("Status")
+                self.basic_info_dict["Type"] = get_list("Type:")
+                self.basic_info_dict["Badge"] = get_text("Badges:")
+                self.basic_info_dict["Year"] = get_list("Year")
+                self.basic_info_dict["Origin"] = get_list("Origin")
+                self.basic_info_dict["Region"] = get_list("Region")
+                self.basic_info_dict["Tags"] = entry_tags
                 # Then store them
-                self.basic_info_dict["Unit"] = basic_info[0]
-                self.basic_info_dict["Status"] = basic_info[2]
-                self.basic_info_dict["Type"] = basic_info[4]
-
-                # NSFW stuff handler
-                if basic_info[6] == "NSFW":
-                    self.basic_info_dict["Badge"] = basic_info[6]
-                    self.basic_info_dict["Year"] = basic_info[8]
-                else:
-                    self.basic_info_dict["Badge"] = "SFW"
-                    self.basic_info_dict["Year"] = basic_info[6]
-
-                self.basic_info_dict["Tags"] = entry_tags[1]
+                self.basic_info_dict["Unit"] = cast(
+                    bs4.Tag, entry_body.find("a", attrs={"class": "entry-category-badge"})
+                ).text.strip()
 
                 # Get url of template
                 self.org_img_urls = []
                 if entry_body.find("center") is not None:
-                    imgs = entry_body.find("center").find_all("img")
+                    imgs = cast(bs4.Tag, entry_body.find("center")).find_all("img")
                     self.org_img_urls = [ele["data-src"] for ele in imgs]
 
                 # Store url to basic_info_dict
                 self.basic_info_dict["Template urls"] = self.org_img_urls
-            except:
-                self.basic_info_dict["Unit"] = ""
-                self.basic_info_dict["Status"] = ""
-                self.basic_info_dict["Type"] = ""
-                self.basic_info_dict["Badge"] = ""
-                self.basic_info_dict["Year"] = ""
-                self.basic_info_dict["Tags"] = ""
-                self.basic_info_dict["Template urls"] = []
+            except Exception as e:
+                print(e)
                 self.org_img_urls = []
 
         else:
@@ -97,7 +120,7 @@ class MemePage:
             for org_img_url in self.org_img_urls:
                 response = http.request("GET", org_img_url, HEADERS)
                 file_type = response.headers["Content-Type"].split("/")[-1]
-                fname_path = DEFAULT_DOWNLOAD_PATH + self.basic_info_dict["Name"] + " " + str(i)
+                fname_path = os.path.join(custom_path, self.basic_info_dict["Name"] + " " + str(i))
                 with open(fname_path + "." + file_type, "wb") as f:
                     f.write(response.data)
 

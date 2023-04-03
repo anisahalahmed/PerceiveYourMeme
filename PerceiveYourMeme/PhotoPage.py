@@ -1,8 +1,12 @@
-import urllib3
-import bs4
 import os
 from json import dumps
-from .CONST import HEADERS, DEFAULT_DOWNLOAD_PATH
+from typing import TypedDict, cast
+
+import bs4
+import urllib3
+from dateutil.parser import parse
+
+from .CONST import DEFAULT_DOWNLOAD_PATH, HEADERS
 
 
 def isValid(url):
@@ -15,16 +19,29 @@ def isValid(url):
     return False
 
 
+PhotoInfo = TypedDict(
+    "PhotoInfo",
+    {
+        "Id": str,
+        "Name": str,
+        "Title": str,
+        "Meme": str,
+        "Uploaded": int,
+        "Tags": list[str],
+        "Original url": str,
+        "Direct photo url": str,
+    },
+    total=False,
+)
+
+
 class PhotoPage:
     """Creates an object which stores basic details of a photo and the photo itself"""
 
-    def __init__(self, url):
-        self.basic_info_dict = {}
+    def __init__(self, url: str):
+        self.basic_info_dict: PhotoInfo = {}
 
         if isValid(url):
-            # Store Photo url
-            self.basic_info_dict["Original url"] = url
-
             # Get name and id of photo
             id_name = url.split("/")[-1].split("-")
             self.basic_info_dict["Id"] = id_name[0]
@@ -35,15 +52,28 @@ class PhotoPage:
             response = http.request("GET", url, headers=HEADERS)
             soup = bs4.BeautifulSoup(response.data, "html.parser")
 
+            heading = cast(bs4.Tag, soup.find("h1", attrs={"id": "media-title"}))
+            meme = heading.a.text.strip() if heading.a else ""
+            self.basic_info_dict["Meme"] = meme
+            self.basic_info_dict["Title"] = heading.text.replace(meme, "", 1).strip().removeprefix("-").strip()
+
+            dl_entry = cast(bs4.Tag, soup.find("p", attrs={"id": "tag_list"})).find_all("a", attrs={"data-tag": True})
+            self.basic_info_dict["Tags"] = [ele["data-tag"] for ele in dl_entry]
+
+            timeago = cast(bs4.Tag, soup.find("abbr", attrs={"class": "timeago"}))
+            if timeago and timeago["title"]:
+                self.basic_info_dict["Uploaded"] = parse(str(timeago["title"])).year
+
+            # Store Photo url
+            self.basic_info_dict["Original url"] = url
+
             # Get direct url of photo
             try:
-                photo = soup.find("textarea", attrs={"class": "photo_embed"})
-                photo = photo.text.replace(" ", "").replace("!", "")
-                self.basic_info_dict["Direct photo url"] = photo
-
+                photo = cast(bs4.Tag, soup.find("textarea", attrs={"class": "photo_embed"}))
+                photourl = photo.text.replace(" ", "").replace("!", "")
+                self.basic_info_dict["Direct photo url"] = photourl
             except AttributeError:
-                print("No direct url for this photo was found")
-                self.basic_info_dict["Direct photo url"] = None
+                print(f"No direct url for was found for {url}")
         else:
             print(f"{url} is not a valid photo url")
 

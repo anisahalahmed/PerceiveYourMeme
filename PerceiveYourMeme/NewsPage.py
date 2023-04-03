@@ -1,6 +1,9 @@
-import urllib3
+import os
+
 import bs4
-from .CONST import HEADERS, DEFAULT_DOWNLOAD_PATH
+import urllib3
+
+from .CONST import DEFAULT_DOWNLOAD_PATH, HEADERS
 
 
 class NewsPage:
@@ -69,7 +72,7 @@ class NewsPage:
             response = http.request("GET", self.head_img_url, headers=HEADERS)
             if response.status == 200:
                 file_type = response.headers["Content-Type"].split("/")[-1]
-                fname_path = DEFAULT_DOWNLOAD_PATH + self.info_dict["Heading"]
+                fname_path = os.path.join(custom_path, self.info_dict["Heading"])
                 with open(fname_path + "." + file_type, "wb") as f:
                     f.write(response.data)
 
