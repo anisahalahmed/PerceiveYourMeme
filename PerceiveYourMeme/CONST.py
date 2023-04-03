@@ -38,3 +38,12 @@ DEFAULT_DOWNLOAD_PATH = ""
 # Define default download path
 # This depends on OS
 # If you are smart and have time, https://stackoverflow.com/questions/35851281/python-finding-the-users-downloads-folder
+
+from urllib3 import PoolManager
+from pyrate_limiter import Duration, RequestRate, Limiter
+
+limiter = Limiter(RequestRate(60, Duration.MINUTE))
+
+http = PoolManager()
+
+request = limiter.ratelimit(delay=True)(http.request)

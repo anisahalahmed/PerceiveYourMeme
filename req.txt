@@ -9,3 +9,4 @@ six
 soupsieve
 sqlparse
 urllib3
+pyrate_limiter

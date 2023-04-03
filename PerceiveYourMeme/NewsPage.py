@@ -2,30 +2,27 @@ import os
 from typing import cast
 
 import bs4
-import urllib3
 
-from .CONST import DEFAULT_DOWNLOAD_PATH, HEADERS
+from .CONST import DEFAULT_DOWNLOAD_PATH, HEADERS, request
 
 
 class NewsPage:
     def isValid(self, url: str) -> bool:
         if "/news" in url:
-            response = self.http.request("GET", url, headers=HEADERS)
+            response = request("GET", url, headers=HEADERS)
             return response.status == 200
         else:
             return False
 
     # An object to store a news articles
     def __init__(self, url: str) -> None:
-        self.http = urllib3.PoolManager()
-
         if self.isValid(url):
             self.info_dict = {}
             # Store News url
             self.info_dict["News url"] = url
 
             # Get the html document. This can be slow due to the internet
-            response = self.http.request("GET", url, headers=HEADERS)
+            response = request("GET", url, headers=HEADERS)
             soup = bs4.BeautifulSoup(response.data, "html.parser")
 
             try:
@@ -69,8 +66,7 @@ class NewsPage:
         # then name them corresponding to self.info_dict['Head']
         # Use attributes self.head_img_url
         if isinstance(self.head_img_url, str):
-            http = urllib3.PoolManager()
-            response = http.request("GET", self.head_img_url, headers=HEADERS)
+            response = request("GET", self.head_img_url, headers=HEADERS)
             if response.status == 200:
                 file_type = response.headers["Content-Type"].split("/")[-1]
                 fname_path = os.path.join(custom_path, self.info_dict["Heading"])

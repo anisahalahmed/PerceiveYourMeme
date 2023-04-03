@@ -2,9 +2,8 @@ from typing import Iterable, cast
 from urllib.parse import urljoin
 
 import bs4
-import urllib3
 
-from .CONST import HEADERS, KYM
+from .CONST import HEADERS, KYM, request
 from .MemePage import MemePage
 from .NewsPage import NewsPage
 from .PhotoPage import PhotoPage
@@ -25,13 +24,11 @@ class SearchEntry:
         # To return 2D list of MemePage objects
         # MemePageList[search_page_index][MemePage_index_in_search_page]
 
-        http = urllib3.PoolManager()
-
         MemePageList: list[Iterable[MemePage]] = []
 
         for page_index in range(1, self.max_pages + 1):
             url = url_maker("entries", page_index, self.query, self.sort)
-            response = http.request("GET", url, headers=HEADERS)
+            response = request("GET", url, headers=HEADERS)
             soup = bs4.BeautifulSoup(response.data, "html.parser")
 
             headers3 = cast(bs4.Tag, soup.find("div", attrs={"id": "entries"})).find("h3")
@@ -60,13 +57,11 @@ class SearchImage:
         # If use this to get multiple images,
         # name of PhotoPage onject will be blank
 
-        http = urllib3.PoolManager()
-
         PhotoPageList: list[Iterable[PhotoPage]] = []
 
         for page_index in range(1, self.max_pages + 1):
             url = url_maker("images", page_index, self.query, self.sort)
-            response = http.request("GET", url, headers=HEADERS)
+            response = request("GET", url, headers=HEADERS)
             soup = bs4.BeautifulSoup(response.data, "html.parser")
 
             entries = cast(bs4.Tag, soup.find("div", attrs={"id": "entries"}))
@@ -92,13 +87,11 @@ class SearchNews:
         # To return 2D list of NewsPages objects
         # NewsPageList[search_page_index][NewsPage_index_in_search_page]
 
-        http = urllib3.PoolManager()
-
         NewsPageList: list[Iterable[NewsPage]] = []
 
         for page_index in range(1, self.max_pages + 1):
             url = url_maker("news", page_index, self.query, self.sort)
-            response = http.request("GET", url, headers=HEADERS)
+            response = request("GET", url, headers=HEADERS)
             soup = bs4.BeautifulSoup(response.data, "html.parser")
 
             headers3 = cast(bs4.Tag, soup.find("div", attrs={"id": "entries"})).h3

@@ -2,12 +2,12 @@ import os
 from json import dumps
 from typing import TypedDict, cast
 from urllib.parse import urljoin
+from urllib3.util import parse_url
 
 import bs4
-import urllib3
 from dateutil.parser import parse
 
-from .CONST import DEFAULT_DOWNLOAD_PATH, HEADERS, KYM
+from .CONST import DEFAULT_DOWNLOAD_PATH, HEADERS, KYM, request
 
 
 def isValid(url):
@@ -15,8 +15,7 @@ def isValid(url):
     """Checks if given url is a valid know your meme photo url"""
 
     if "https://knowyourmeme.com/photos/" in url:
-        http = urllib3.PoolManager()
-        response = http.request("GET", url, headers=HEADERS)
+        response = request("GET", url, headers=HEADERS)
         return response.status == 200
     return False
 
@@ -51,8 +50,7 @@ class PhotoPage:
             self.basic_info_dict["Name"] = " ".join(id_name[1:])
 
             # Get soup. Can be slow due to internet speeds
-            http = urllib3.PoolManager()
-            response = http.request("GET", url, headers=HEADERS)
+            response = request("GET", url, headers=HEADERS)
             soup = bs4.BeautifulSoup(response.data, "html.parser")
 
             heading = cast(bs4.Tag, soup.find("h1", attrs={"id": "media-title"}))
@@ -101,11 +99,10 @@ class PhotoPage:
         """
 
         if self.basic_info_dict["Direct photo url"]:
-            http = urllib3.PoolManager()
             url = self.basic_info_dict["Direct photo url"]
-            response = http.request("GET", url, headers=HEADERS)
+            response = request("GET", url, headers=HEADERS)
             if response.status == 200:
-                _, ext = os.path.splitext(urllib3.util.parse_url(url).path or "")
+                _, ext = os.path.splitext(parse_url(url).path or "")
 
                 photo_path = os.path.join(custom_path, self.basic_info_dict["Id"] + ext)
 

@@ -1,13 +1,11 @@
 import bs4
-import urllib3
 
-from .CONST import HEADERS
+from .CONST import HEADERS, request
 
 
 def isValid(url: str) -> bool:
     if url.startswith("https://knowyourmeme.com/videos/"):
-        http = urllib3.PoolManager()
-        response = http.request("GET", url, headers=HEADERS)
+        response = request("GET", url, headers=HEADERS)
 
         return response.status == 200
     return False
@@ -29,8 +27,7 @@ class VideoPage:
             self.basic_info_dict["Name"] = " ".join(id_name[1:])
 
             # Get soup
-            http = urllib3.PoolManager()
-            response = http.request("GET", url, headers=HEADERS)
+            response = request("GET", url, headers=HEADERS)
             soup = bs4.BeautifulSoup(response.data, "html.parser")
 
     def pprint(self) -> None:

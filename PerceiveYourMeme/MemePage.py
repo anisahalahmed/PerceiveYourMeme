@@ -4,15 +4,14 @@ from typing import TypedDict, cast
 from urllib.parse import urljoin
 
 import bs4
-import urllib3
+from urllib3.util import parse_url
 
-from .CONST import DEFAULT_DOWNLOAD_PATH, HEADERS, KYM
+from .CONST import DEFAULT_DOWNLOAD_PATH, HEADERS, KYM, request
 
 
 def isValid(url: str) -> bool:
     if "https://knowyourmeme.com/memes/" in url:
-        http = urllib3.PoolManager()
-        response = http.request("GET", url, headers=HEADERS)
+        response = request("GET", url, headers=HEADERS)
         return response.status == 200
 
     else:
@@ -53,8 +52,7 @@ class MemePage:
             self.basic_info_dict["Name"] = url.split("/")[-1]
 
             # Get the html document. This can be slow due to the internet
-            http = urllib3.PoolManager()
-            response = http.request("GET", url, headers=HEADERS)
+            response = request("GET", url, headers=HEADERS)
             soup = bs4.BeautifulSoup(response.data, "html.parser")
             try:
                 entry_body = cast(bs4.Tag, soup.find("div", attrs={"class": "c", "id": "entry_body"}))
@@ -136,10 +134,9 @@ class MemePage:
         # Download images
         # then name them corresponding to self.basic_info_dict['Name']
         # Use attributes self.org_img_urls
-        http = urllib3.PoolManager()
         url = self.basic_info_dict["Header image url"]
-        response = http.request("GET", url, HEADERS)
-        _, ext = os.path.splitext(urllib3.util.parse_url(url).path or "")
+        response = request("GET", url, HEADERS)
+        _, ext = os.path.splitext(parse_url(url).path or "")
         fname_path = os.path.join(custom_path, self.basic_info_dict["Name"])
         with open(fname_path + ext, "wb") as f:
             f.write(response.data)
@@ -151,10 +148,9 @@ class MemePage:
         # then name them corresponding to self.basic_info_dict['Name']
         # Use attributes self.org_img_urls
         if len(self.org_img_urls) > 0:
-            http = urllib3.PoolManager()
             i = 0
             for org_img_url in self.org_img_urls:
-                response = http.request("GET", org_img_url, HEADERS)
+                response = request("GET", org_img_url, HEADERS)
                 file_type = response.headers["Content-Type"].split("/")[-1]
                 fname_path = os.path.join(custom_path, self.basic_info_dict["Name"] + " " + str(i))
                 with open(fname_path + "." + file_type, "wb") as f:
@@ -187,10 +183,8 @@ class MemePage:
         :param sort: 'newest' or 'oldest' or 'comments' or 'favorites' or 'score' or 'low-score' or 'views'
         """
 
-        http = urllib3.PoolManager()
-
         url = f"{self.url}/photos/sort/{sort}/page/{page_index}"
-        response = http.request("GET", url, headers=HEADERS)
+        response = request("GET", url, headers=HEADERS)
         soup = bs4.BeautifulSoup(response.data, "html.parser")
 
         entries = soup.find("div", attrs={"id": "entries"})

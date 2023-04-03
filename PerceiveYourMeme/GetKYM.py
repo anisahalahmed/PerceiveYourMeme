@@ -2,18 +2,16 @@
 # that are dedicated to get memes, images, news
 # from hashes in CONST.py
 
-from typing import Iterable, cast
+from typing import cast
 from urllib.parse import urljoin
 
 import bs4
-import urllib3
 
-from .CONST import *
+from .CONST import HEADERS, KYM, KYM_HASH, PHOTOS_HASH, request
 
 
 def get_soup(url: str) -> bs4.BeautifulSoup:
-    http = urllib3.PoolManager()
-    response = http.request("GET", url, headers=HEADERS)
+    response = request("GET", url, headers=HEADERS)
     soup = bs4.BeautifulSoup(response.data, "html.parser")
     return soup
 
