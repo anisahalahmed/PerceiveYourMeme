@@ -1,9 +1,6 @@
 import urllib3
 import bs4
-try:
-    from .CONST import HEADERS, DEFAULT_DOWNLOAD_PATH
-except ImportError:
-    from CONST import HEADERS, DEFAULT_DOWNLOAD_PATH
+from .CONST import HEADERS, DEFAULT_DOWNLOAD_PATH
 
 
 def isValid(url):

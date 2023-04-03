@@ -1,31 +1,28 @@
 import urllib3
 import bs4
-try:
-    from .CONST import HEADERS, KYM
-    from .MemePage import MemePage
-    from .PhotoPage import PhotoPage
-    from .NewsPage import NewsPage
-except ImportError:
-    from CONST import HEADERS, KYM
-    from MemePage import MemePage
-    from PhotoPage import PhotoPage
-    from NewsPage import NewsPage
+from urllib.parse import urljoin
 
+from .CONST import HEADERS, KYM
+from .MemePage import MemePage
+from .PhotoPage import PhotoPage
+from .NewsPage import NewsPage
 
 def url_maker(context, page_index, query, sort):
-    return (KYM +
-            '/search?context=' +
-            context +
-            '&page=' +
-            str(page_index) +
-            '&q=' +
-            query +
-            '&sort=' +
-            sort)
+    return (
+        KYM
+        + "/search?context="
+        + context
+        + "&page="
+        + str(page_index)
+        + "&q="
+        + query
+        + "&sort="
+        + sort
+    )
 
 
-class SearchEntry():
-    def __init__(self, query, max_pages=1, sort='relevance'):
+class SearchEntry:
+    def __init__(self, query, max_pages=1, sort="relevance"):
         self.max_pages = max_pages
         self.query = query
         self.sort = sort
@@ -37,27 +34,27 @@ class SearchEntry():
 
         http = urllib3.PoolManager()
 
-        MemePageList = []
+        MemePageList: list[list[MemePage]] = []
 
-        for page_index in range(1, self.max_pages+1):
-            url = url_maker('entries', page_index, self.query, self.sort)
-            response = http.request('GET', url, headers=HEADERS)
-            soup = bs4.BeautifulSoup(response.data, 'html.parser')
+        for page_index in range(1, self.max_pages + 1):
+            url = url_maker("entries", page_index, self.query, self.sort)
+            response = http.request("GET", url, headers=HEADERS)
+            soup = bs4.BeautifulSoup(response.data, "html.parser")
 
-            headers3 = soup.find('div', attrs={'id': 'entries'}).find('h3')
+            headers3 = soup.find("div", attrs={"id": "entries"}).find("h3")
             if headers3 is not None:
                 break
 
-            entry_list = soup.find('table', attrs={'class': 'entry_list'})
-            tag_a_list = entry_list.find_all('a', attrs={'class': 'photo'})
-            url_list = [KYM+tag_a['href'] for tag_a in tag_a_list]
+            entry_list = soup.find("table", attrs={"class": "entry_list"})
+            tag_a_list = entry_list.find_all("a", attrs={"class": "photo"})
+            url_list = [urljoin(KYM, tag_a["href"]) for tag_a in tag_a_list]
             MemePageList.append([MemePage(u_r_l) for u_r_l in url_list])
 
         self.MemePageList = MemePageList
 
 
-class SearchImage():
-    def __init__(self, query, max_pages=1, sort='relevance'):
+class SearchImage:
+    def __init__(self, query, max_pages=1, sort="relevance"):
         self.max_pages = max_pages
         self.query = query
         self.sort = sort
@@ -72,27 +69,27 @@ class SearchImage():
 
         http = urllib3.PoolManager()
 
-        PhotoPageList = []
+        PhotoPageList: list[list[PhotoPage]] = []
 
-        for page_index in range(1, self.max_pages+1):
-            url = url_maker('images', page_index, self.query, self.sort)
-            response = http.request('GET', url, headers=HEADERS)
-            soup = bs4.BeautifulSoup(response.data, 'html.parser')
+        for page_index in range(1, self.max_pages + 1):
+            url = url_maker("images", page_index, self.query, self.sort)
+            response = http.request("GET", url, headers=HEADERS)
+            soup = bs4.BeautifulSoup(response.data, "html.parser")
 
-            entries = soup.find('div', attrs={'id': 'entries'})
-            if entries.find('h3') is not None:
+            entries = soup.find("div", attrs={"id": "entries"})
+            if entries.find("h3") is not None:
                 break
 
-            photo_gallery = soup.find('div', attrs={'id': 'photo_gallery'})
-            tag_a_list = photo_gallery.find_all('a', attrs={'class': 'photo'})
-            url_list = [KYM+tag_a['href'] for tag_a in tag_a_list]
+            photo_gallery = soup.find("div", attrs={"id": "photo_gallery"})
+            tag_a_list = photo_gallery.find_all("a", attrs={"class": "photo"})
+            url_list = [urljoin(KYM, tag_a["href"]) for tag_a in tag_a_list]
             PhotoPageList.append([PhotoPage(u_r_l) for u_r_l in url_list])
 
         self.PhotoPageList = PhotoPageList
 
 
-class SearchNews():
-    def __init__(self, query, max_pages=1, sort='relevance'):
+class SearchNews:
+    def __init__(self, query, max_pages=1, sort="relevance"):
         self.max_pages = max_pages
         self.query = query
         self.sort = sort
@@ -104,31 +101,28 @@ class SearchNews():
 
         http = urllib3.PoolManager()
 
-        NewsPageList = []
+        NewsPageList: list[list[NewsPage]] = []
 
-        for page_index in range(1, self.max_pages+1):
-            url = url_maker('news', page_index, self.query, self.sort)
-            response = http.request('GET', url, headers=HEADERS)
-            soup = bs4.BeautifulSoup(response.data, 'html.parser')
+        for page_index in range(1, self.max_pages + 1):
+            url = url_maker("news", page_index, self.query, self.sort)
+            response = http.request("GET", url, headers=HEADERS)
+            soup = bs4.BeautifulSoup(response.data, "html.parser")
 
-            headers3 = soup.find('div', attrs={'id': 'entries'}).find('h3')
+            headers3 = soup.find("div", attrs={"id": "entries"}).find("h3")
             if headers3 is not None:
                 break
 
-            entries = soup.find('div', attrs={"id": "entries"})
-            headers1 = entries.find_all('div')[1].find_all('h1')
-            url_list = ['https:' + h1.find('a')['href'] for h1 in headers1]
-            url_list = [u_r_l.replace(':443', '') for u_r_l in url_list]
-            print(url_list)
+            entries = soup.find("div", attrs={"id": "entries"})
+            headers1 = entries.find_all("div")[1].find_all("h1")
+            url_list = [urljoin(KYM, h1.find("a")["href"]) for h1 in headers1]
             NewsPageList.append([NewsPage(u_r_l) for u_r_l in url_list])
 
         self.NewsPageList = NewsPageList
 
 
-class SearchEngine():
+class SearchEngine:
     # A class to search for MemePage, PhotoPage, VideoPage
-    def __init__(self, query, context='entries',
-                 max_pages=1, sort='relevance'):
+    def __init__(self, query, context="entries", max_pages=1, sort="relevance"):
         # context : 'entries' or 'images' or 'news'
         # max_pages : a positive number
         # query : a string, for example 'Elon Musk'
@@ -139,40 +133,40 @@ class SearchEngine():
         else:
             self.max_pages = max_pages
 
-        if context not in ['entries', 'images', 'news']:
-            self.context = 'entries'
+        if context not in ["entries", "images", "news"]:
+            self.context = "entries"
         else:
             self.context = context
 
-        if sort not in ['relevance', 'views', 'newest', 'oldest']:
-            self.sort = 'relevance'
+        if sort not in ["relevance", "views", "newest", "oldest"]:
+            self.sort = "relevance"
         else:
             self.sort = sort
 
-        if isinstance(query, str) and query != '':
+        if isinstance(query, str) and query != "":
             # Format query to have the valid format
-            self.query = query.replace(' ', '+', -1)
+            self.query = query.replace(" ", "+", -1)
         else:
-            print('Query is not a string')
-            self.query = ''
+            print("Query is not a string")
+            self.query = ""
 
     def build(self):
         # Build object SearchEntry, SearchImage, SearchNews
-        if self.query == '':
-            print('No object is build')
+        if self.query == "":
+            print("No object is build")
             return None
         else:
-            if self.context == 'entries':
-                return SearchEntry(query=self.query,
-                                   max_pages=self.max_pages,
-                                   sort=self.sort)
+            if self.context == "entries":
+                return SearchEntry(
+                    query=self.query, max_pages=self.max_pages, sort=self.sort
+                )
 
-            if self.context == 'images':
-                return SearchImage(query=self.query,
-                                   max_pages=self.max_pages,
-                                   sort=self.sort)
+            if self.context == "images":
+                return SearchImage(
+                    query=self.query, max_pages=self.max_pages, sort=self.sort
+                )
 
-            if self.context == 'news':
-                return SearchNews(query=self.query,
-                                  max_pages=self.max_pages,
-                                  sort=self.sort)
+            if self.context == "news":
+                return SearchNews(
+                    query=self.query, max_pages=self.max_pages, sort=self.sort
+                )

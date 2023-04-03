@@ -2,10 +2,7 @@ import urllib3
 import bs4
 import os
 from json import dumps
-try:
-    from .CONST import HEADERS, DEFAULT_DOWNLOAD_PATH
-except ImportError:
-    from CONST import HEADERS, DEFAULT_DOWNLOAD_PATH
+from .CONST import HEADERS, DEFAULT_DOWNLOAD_PATH
 
 
 def isValid(url):
@@ -48,7 +45,7 @@ class PhotoPage():
                 print("No direct url for this photo was found")
                 self.basic_info_dict['Direct photo url'] = None
         else:
-            print('Not a valid url')
+            print(f'{url} is not a valid photo url')
 
     def pprint(self):
         """Pretty print of basic_info_dict"""

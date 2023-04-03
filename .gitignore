@@ -4,6 +4,9 @@ __pycache__
 .pytest_cache
 PyM-venv
 PyM-trial
+build
+PerceiveYourMeme.egg-info
+.vscode
 
 # Ignore files
 *.bat

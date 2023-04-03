@@ -1,91 +1,90 @@
+from typing import cast
 import urllib3
 import bs4
-try:
-    from .CONST import HEADERS, DEFAULT_DOWNLOAD_PATH
-except ImportError:
-    from CONST import HEADERS, DEFAULT_DOWNLOAD_PATH
+from urllib.parse import urljoin
+from .CONST import KYM, HEADERS, DEFAULT_DOWNLOAD_PATH
+from .PhotoPage import PhotoPage
 
 
 def isValid(url):
-    if 'https://knowyourmeme.com/memes/' in url:
+    if "https://knowyourmeme.com/memes/" in url:
         http = urllib3.PoolManager()
-        response = http.request('GET', url, headers=HEADERS)
+        response = http.request("GET", url, headers=HEADERS)
         return response.status == 200
 
     else:
         return False
 
 
-class MemePage():
+class MemePage:
     # An object to store basic information and template of a meme
     def __init__(self, url):
+        self.url = url
         if isValid(url):
             self.basic_info_dict = {}
             # Store Meme url
-            self.basic_info_dict['Meme url'] = url
+            self.basic_info_dict["Meme url"] = url
 
             # Name meme
-            self.basic_info_dict['Name'] = url.split('/')[-1].replace('-', ' ')
+            self.basic_info_dict["Name"] = url.split("/")[-1].replace("-", " ")
 
             # Get the html document. This can be slow due to the internet
             http = urllib3.PoolManager()
-            response = http.request('GET', url, headers=HEADERS)
-            soup = bs4.BeautifulSoup(response.data, 'html.parser')
+            response = http.request("GET", url, headers=HEADERS)
+            soup = bs4.BeautifulSoup(response.data, "html.parser")
             try:
-                entry_body = soup.find('div',
-                                       attrs={"class": "c",
-                                              "id": "entry_body"})
+                entry_body = soup.find("div", attrs={"class": "c", "id": "entry_body"})
 
                 # Get basic information and entry tags from entry body
-                dl = entry_body.find('dl').text.split('\n')
-                basic_info = [ele for ele in dl if ele != '']
+                dl = entry_body.find("dl").text.split("\n")
+                basic_info = [ele for ele in dl if ele != ""]
 
-                dl_entry = entry_body.find('dl',
-                                           attrs={"id": "entry_tags"})
-                dl_entry = dl_entry.text.split('\n')
-                entry_tags = [ele for ele in dl_entry if ele != '']
+                dl_entry = entry_body.find("dl", attrs={"id": "entry_tags"})
+                dl_entry = dl_entry.text.split("\n")
+                entry_tags = [ele for ele in dl_entry if ele != ""]
 
                 # Then store them
-                self.basic_info_dict['Unit'] = basic_info[0]
-                self.basic_info_dict['Status'] = basic_info[2]
-                self.basic_info_dict['Type'] = basic_info[4]
+                self.basic_info_dict["Unit"] = basic_info[0]
+                self.basic_info_dict["Status"] = basic_info[2]
+                self.basic_info_dict["Type"] = basic_info[4]
 
                 # NSFW stuff handler
-                if basic_info[6] == 'NSFW':
-                    self.basic_info_dict['Badge'] = basic_info[6]
-                    self.basic_info_dict['Year'] = basic_info[8]
+                if basic_info[6] == "NSFW":
+                    self.basic_info_dict["Badge"] = basic_info[6]
+                    self.basic_info_dict["Year"] = basic_info[8]
                 else:
-                    self.basic_info_dict['Badge'] = 'SFW'
-                    self.basic_info_dict['Year'] = basic_info[6]
+                    self.basic_info_dict["Badge"] = "SFW"
+                    self.basic_info_dict["Year"] = basic_info[6]
 
-                self.basic_info_dict['Tags'] = entry_tags[1]
+                self.basic_info_dict["Tags"] = entry_tags[1]
 
                 # Get url of template
                 self.org_img_urls = []
-                if entry_body.find('center') is not None:
-                    imgs = entry_body.find('center').find_all('img')
-                    self.org_img_urls = [ele['data-src'] for ele in imgs]
+                if entry_body.find("center") is not None:
+                    imgs = entry_body.find("center").find_all("img")
+                    self.org_img_urls = [ele["data-src"] for ele in imgs]
 
                 # Store url to basic_info_dict
-                self.basic_info_dict['Template urls'] = self.org_img_urls
+                self.basic_info_dict["Template urls"] = self.org_img_urls
             except:
-                self.basic_info_dict['Unit'] = ''
-                self.basic_info_dict['Status'] = ''
-                self.basic_info_dict['Type'] = ''
-                self.basic_info_dict['Badge'] = ''
-                self.basic_info_dict['Year'] = ''
-                self.basic_info_dict['Tags'] = ''
-                self.basic_info_dict['Template urls'] = []
+                self.basic_info_dict["Unit"] = ""
+                self.basic_info_dict["Status"] = ""
+                self.basic_info_dict["Type"] = ""
+                self.basic_info_dict["Badge"] = ""
+                self.basic_info_dict["Year"] = ""
+                self.basic_info_dict["Tags"] = ""
+                self.basic_info_dict["Template urls"] = []
                 self.org_img_urls = []
 
         else:
-            print('Not a valid url')
+            print(f"{url} is not a valid meme url")
             self.basic_info_dict = {}
             self.org_img_urls = []
 
     def pprint(self):
         # Pretty print of basic_info_dict
         from json import dumps
+
         print(dumps(self.basic_info_dict, indent=3))
 
     def download_origin_image(self, custom_path=DEFAULT_DOWNLOAD_PATH):
@@ -96,13 +95,12 @@ class MemePage():
             http = urllib3.PoolManager()
             i = 0
             for org_img_url in self.org_img_urls:
-                response = http.request('GET', org_img_url, HEADERS)
-                file_type = response.headers['Content-Type'].split('/')[-1]
-                fname_path = (DEFAULT_DOWNLOAD_PATH +
-                              self.basic_info_dict['Name'] +
-                              ' ' +
-                              str(i))
-                with open(fname_path+'.'+file_type, 'wb') as f:
+                response = http.request("GET", org_img_url, HEADERS)
+                file_type = response.headers["Content-Type"].split("/")[-1]
+                fname_path = (
+                    DEFAULT_DOWNLOAD_PATH + self.basic_info_dict["Name"] + " " + str(i)
+                )
+                with open(fname_path + "." + file_type, "wb") as f:
                     f.write(response.data)
 
                 i += 1
@@ -110,7 +108,7 @@ class MemePage():
             return True
 
         else:
-            print('Org img urls are blank')
+            print("Org img urls are blank")
             return False
             # If this message shows up,
             # it means that YOU have to add these url manually
@@ -120,13 +118,41 @@ class MemePage():
         # To change and update
         # attributes self.org_img_urls
         self.org_img_urls = url_list
-        self.basic_info_dict['Template urls'] = self.org_img_urls
+        self.basic_info_dict["Template urls"] = self.org_img_urls
 
     def get_org_img_urls(self):
         return self.org_img_urls
 
+    def photos(self, sort: str = "newest", max_pages=1):
+        # Scrap this tag <div id="photo_gallery">
+        # To return 2D list of PhotoPage objects
+        # PhotoPageList[search_page_index][PhotoPage_index_in_search_page]
 
-if __name__ == '__main__':
-    crying_cat = MemePage('https://knowyourmeme.com/memes/crying-cat')
+        # If use this to get multiple images,
+        # name of PhotoPage onject will be blank
+
+        http = urllib3.PoolManager()
+
+        PhotoPageList: list[list[PhotoPage]] = []
+
+        for page_index in range(1, max_pages + 1):
+            url = f'{self.url}/photos/sort/{sort}/page/{page_index}'
+            response = http.request("GET", url, headers=HEADERS)
+            soup = bs4.BeautifulSoup(response.data, "html.parser")
+
+            entries = soup.find("div", attrs={"id": "entries"})
+            if entries and entries.find("h3") is not None:
+                break
+
+            photo_gallery = cast(bs4.Tag, soup.find("div", attrs={"id": "photo_gallery"}))
+            tag_a_list = photo_gallery.find_all("a", attrs={"class": "photo"})
+            url_list = [urljoin(KYM, tag_a["href"]) for tag_a in tag_a_list]
+            PhotoPageList.append([PhotoPage(u_r_l) for u_r_l in url_list])
+
+        return PhotoPageList
+
+
+if __name__ == "__main__":
+    crying_cat = MemePage("https://knowyourmeme.com/memes/crying-cat")
     crying_cat.pprint()
     # crying_cat.download_origin_image()
