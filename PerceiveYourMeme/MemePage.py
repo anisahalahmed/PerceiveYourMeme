@@ -1,5 +1,5 @@
 import os
-from typing import TypedDict, cast
+from typing import Iterator, TypedDict, cast
 from urllib.parse import urljoin
 
 import bs4
@@ -154,7 +154,7 @@ class MemePage:
 
         http = urllib3.PoolManager()
 
-        PhotoPageList: list[list[PhotoPage]] = []
+        PhotoPageList: list[Iterator[PhotoPage]] = []
 
         for page_index in range(1, max_pages + 1):
             url = f"{self.url}/photos/sort/{sort}/page/{page_index}"
@@ -168,7 +168,7 @@ class MemePage:
             photo_gallery = cast(bs4.Tag, soup.find("div", attrs={"id": "photo_gallery"}))
             tag_a_list = photo_gallery.find_all("a", attrs={"class": "photo"})
             url_list = [urljoin(KYM, tag_a["href"]) for tag_a in tag_a_list]
-            PhotoPageList.append([PhotoPage(u_r_l) for u_r_l in url_list])
+            PhotoPageList.append(map(PhotoPage, url_list))
 
         return PhotoPageList
 
