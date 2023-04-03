@@ -21,23 +21,20 @@ def get_soup(url: str) -> bs4.BeautifulSoup:
     return soup
 
 
-def get_memes(directory: str = "", page_index: int = 1, sort: str = "") -> Iterable[MemePage]:
-    # directory : '' or 'popular' or 'submissions'
-    # page_index : a positive integer
-    # sort : '' or 'views' or 'comments'
-    # To return a list of MemePage objects
+def get_memes(directory: str = "confirmed", page_index: int = 1, sort: str = "newest") -> Iterable[MemePage]:
+    """
+    Returns a list of MemePage objects
+
+    :param directory: 'confirmed' or 'popular' or 'submissions'
+    :param page_index: a positive integer
+    :param sort: 'newest' or 'oldest' or 'views' or 'comments' or 'chronological' or 'reverse-chronological' or 'images' or 'videos'
+    """
     url = ""
 
     if page_index < 1:
         page_index = 1
 
-    if directory == "":
-        url = KYM_HASH["memes"] + str(page_index) + MEMES_SORT_HASH[sort]
-    else:
-        if directory in ["popular", "submissions"]:
-            url = MEMES_HASH[directory] + str(page_index) + MEMES_SORT_HASH[sort]
-        else:
-            url = KYM_HASH["memes"] + str(page_index) + MEMES_SORT_HASH[sort]
+    url = KYM_HASH["memes"] + directory + "/page/" + str(page_index) + "?sort=" + sort
 
     soup = get_soup(url)
 

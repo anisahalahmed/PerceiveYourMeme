@@ -2,21 +2,13 @@
 KYM = "https://knowyourmeme.com"
 
 KYM_HASH = {
-    "memes": "https://knowyourmeme.com/memes/page/",
+    "memes": "https://knowyourmeme.com/memes/",
     "photos": "https://knowyourmeme.com/photos/page/",
     "news": "https://knowyourmeme.com/news/page/",
 }
 # KYM_HASH : a set of directories
 # append a positive integer to get the corresponding page number
 # For example, https://knowyourmeme.com/memes/page/1 will be the page.
-
-MEMES_HASH = {
-    "popular": "https://knowyourmeme.com/memes/popular/page/",
-    "submissions": "https://knowyourmeme.com/memes/submissions/page/",
-}
-# MEMES_HASH : a set of sub-directories
-# append a positive integer to get the corresponding page number
-# For example, https://knowyourmeme.com/memes/popular/page/1 will be the page.
 
 MEMES_SORT_HASH = {"views": "?sort=views", "comments": "?sort=comments", "": ""}
 # MEMES_SORT_HASH : a set of sorting methods

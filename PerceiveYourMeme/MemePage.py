@@ -1,5 +1,5 @@
 import os
-from typing import Iterator, TypedDict, cast
+from typing import Iterable, Iterator, TypedDict, cast
 from urllib.parse import urljoin
 
 import bs4
@@ -144,33 +144,30 @@ class MemePage:
     def get_org_img_urls(self):
         return self.org_img_urls
 
-    def photos(self, sort: str = "newest", max_pages=1):
-        # Scrap this tag <div id="photo_gallery">
-        # To return 2D list of PhotoPage objects
-        # PhotoPageList[search_page_index][PhotoPage_index_in_search_page]
+    def photos(self, sort: str = "newest", page_index=1) -> Iterable[PhotoPage]:
+        """
+        Get photos associated with this meme
 
-        # If use this to get multiple images,
-        # name of PhotoPage onject will be blank
+        :param sort: 'newest' or 'oldest' or 'comments' or 'favorites' or 'score' or 'low-score' or 'views'
+        """
 
         http = urllib3.PoolManager()
 
-        PhotoPageList: list[Iterator[PhotoPage]] = []
+        url = f"{self.url}/photos/sort/{sort}/page/{page_index}"
+        response = http.request("GET", url, headers=HEADERS)
+        soup = bs4.BeautifulSoup(response.data, "html.parser")
 
-        for page_index in range(1, max_pages + 1):
-            url = f"{self.url}/photos/sort/{sort}/page/{page_index}"
-            response = http.request("GET", url, headers=HEADERS)
-            soup = bs4.BeautifulSoup(response.data, "html.parser")
+        entries = soup.find("div", attrs={"id": "entries"})
+        if entries and entries.find("h3") is not None:
+            return []
 
-            entries = soup.find("div", attrs={"id": "entries"})
-            if entries and entries.find("h3") is not None:
-                break
+        photo_gallery = cast(bs4.Tag, soup.find("div", attrs={"id": "photo_gallery"}))
+        if not photo_gallery:
+            return []
 
-            photo_gallery = cast(bs4.Tag, soup.find("div", attrs={"id": "photo_gallery"}))
-            tag_a_list = photo_gallery.find_all("a", attrs={"class": "photo"})
-            url_list = [urljoin(KYM, tag_a["href"]) for tag_a in tag_a_list]
-            PhotoPageList.append(map(PhotoPage, url_list))
-
-        return PhotoPageList
+        tag_a_list = photo_gallery.find_all("a", attrs={"class": "photo"})
+        url_list = [urljoin(KYM, tag_a["href"]) for tag_a in tag_a_list]
+        return map(PhotoPage, url_list)
 
 
 if __name__ == "__main__":

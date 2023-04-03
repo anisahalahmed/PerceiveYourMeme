@@ -86,10 +86,9 @@ class Test(unittest.TestCase):
 
     def test_get_images_for_meme(self) -> None:
         meme = MemePage("https://knowyourmeme.com/memes/smudge-the-cat")
-        for page in meme.photos():
-            for photo in islice(page, 3):
-                assert photo.basic_info_dict
-                photo.pprint()
+        for photo in islice(meme.photos(), 3):
+            assert photo.basic_info_dict
+            photo.pprint()
 
 
 if __name__ == "__main__":
