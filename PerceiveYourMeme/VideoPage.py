@@ -1,9 +1,10 @@
-import urllib3
 import bs4
-from .CONST import HEADERS, DEFAULT_DOWNLOAD_PATH
+import urllib3
+
+from .CONST import HEADERS
 
 
-def isValid(url):
+def isValid(url: str) -> bool:
     if url.startswith("https://knowyourmeme.com/videos/"):
         http = urllib3.PoolManager()
         response = http.request("GET", url, headers=HEADERS)
@@ -15,7 +16,7 @@ def isValid(url):
 class VideoPage:
     """Creates objects to store basic details of a video and that video"""
 
-    def __init__(self, url):
+    def __init__(self, url: str) -> None:
         # Contains all basic information about the video
         self.basic_info_dict = {}
 
@@ -32,7 +33,7 @@ class VideoPage:
             response = http.request("GET", url, headers=HEADERS)
             soup = bs4.BeautifulSoup(response.data, "html.parser")
 
-    def pprint(self):
+    def pprint(self) -> None:
         """Pretty print of self.basic_info_dict"""
         from json import dumps
 

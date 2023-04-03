@@ -1,4 +1,5 @@
 import os
+from typing import cast
 
 import bs4
 import urllib3
@@ -7,7 +8,7 @@ from .CONST import DEFAULT_DOWNLOAD_PATH, HEADERS
 
 
 class NewsPage:
-    def isValid(self, url):
+    def isValid(self, url: str) -> bool:
         if "/news" in url:
             response = self.http.request("GET", url, headers=HEADERS)
             return response.status == 200
@@ -15,7 +16,7 @@ class NewsPage:
             return False
 
     # An object to store a news articles
-    def __init__(self, url):
+    def __init__(self, url: str) -> None:
         self.http = urllib3.PoolManager()
 
         if self.isValid(url):
@@ -29,19 +30,19 @@ class NewsPage:
 
             try:
                 # Get the super_header information
-                super_header = soup.find("div", attrs={"id": "super-header"})
-                self.info_dict["Heading"] = super_header.find("h1").text[1:-1]
+                super_header = cast(bs4.Tag, soup.find("div", attrs={"id": "super-header"}))
+                self.info_dict["Heading"] = super_header.h1.text[1:-1] if super_header.h1 else ""
 
-                t_stmp = super_header.find("span", attrs={"class": "header-timestamp"})
+                t_stmp = cast(bs4.Tag, super_header.find("span", attrs={"class": "header-timestamp"}))
                 self.info_dict["Timestamp"] = t_stmp.text[1:-1]
 
-                h_time = super_header.find("p", attrs={"class": "header-timestamp"})
-                self.info_dict["Author"] = h_time.find("a").text
+                h_time = cast(bs4.Tag, super_header.find("p", attrs={"class": "header-timestamp"}))
+                self.info_dict["Author"] = cast(bs4.Tag, h_time.find("a")).text
 
                 # Get the heading img
-                maru = soup.find("div", attrs={"id": "maru"})
-                i = maru.find("img", attrs={"class": "news-post-header-image"})
-                self.head_img_url = i["src"] or i["data-src"]
+                maru = cast(bs4.Tag, soup.find("div", attrs={"id": "maru"}))
+                i = cast(bs4.Tag, maru.find("img", attrs={"class": "news-post-header-image"}))
+                self.head_img_url = str(i["src"] or i["data-src"])
 
                 # Store url to info_dict
                 self.info_dict["Head image url"] = self.head_img_url
@@ -55,15 +56,15 @@ class NewsPage:
         else:
             print(f"{url} is not a valid news url")
             self.info_dict = {}
-            self.head_img_url = None
+            self.head_img_url = ""
 
-    def pprint(self):
+    def pprint(self) -> None:
         # Pretty print of info_dict
         from json import dumps
 
         print(dumps(self.info_dict, indent=3))
 
-    def download_head_img(self, custom_path=DEFAULT_DOWNLOAD_PATH):
+    def download_head_img(self, custom_path: str = DEFAULT_DOWNLOAD_PATH) -> bool:
         # Download photo
         # then name them corresponding to self.info_dict['Head']
         # Use attributes self.head_img_url

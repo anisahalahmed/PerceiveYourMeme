@@ -10,6 +10,7 @@ from .CONST import DEFAULT_DOWNLOAD_PATH, HEADERS
 
 
 def isValid(url):
+    # type: (str) -> bool
     """Checks if given url is a valid know your meme photo url"""
 
     if "https://knowyourmeme.com/photos/" in url:
@@ -78,11 +79,13 @@ class PhotoPage:
             print(f"{url} is not a valid photo url")
 
     def pprint(self):
+        # type: () -> None
         """Pretty print of basic_info_dict"""
 
         print(dumps(self.basic_info_dict, indent=3))
 
     def download_photo(self, custom_path=DEFAULT_DOWNLOAD_PATH):
+        # type: (str) -> None
         """Download photo from given url custom_path/Photo name
         If no name is available, the photo is named after its ID instead
         """

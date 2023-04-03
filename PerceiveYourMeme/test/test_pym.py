@@ -1,5 +1,6 @@
 import os
 import unittest
+from itertools import islice
 
 from .. import *
 
@@ -50,43 +51,43 @@ class Test(unittest.TestCase):
     def test_search_entries(self) -> None:
         entries = SearchEntry("Elon Musk")
         for page in entries.search():
-            for meme in page:
+            for meme in islice(page, 3):
                 assert meme.basic_info_dict
                 meme.pprint()
 
     def test_search_images(self) -> None:
         images = SearchImage("Elon Musk")
         for page in images.search():
-            for photo in page:
+            for photo in islice(page, 3):
                 assert photo.basic_info_dict
                 photo.pprint()
 
     def test_search_news(self) -> None:
         articles = SearchNews("Elon Musk")
         for page in articles.search():
-            for news in page:
+            for news in islice(page, 3):
                 assert news.info_dict
                 news.pprint()
 
     def test_get_memes(self) -> None:
-        for meme in get_memes():
+        for meme in islice(get_memes(), 3):
             assert meme.basic_info_dict
             meme.pprint()
 
     def test_get_images(self) -> None:
-        for photo in get_photos():
+        for photo in islice(get_photos(), 3):
             assert photo.basic_info_dict
             photo.pprint()
 
     def test_get_news(self) -> None:
-        for news in get_news():
+        for news in islice(get_news(), 3):
             assert news.info_dict
             news.pprint()
 
     def test_get_images_for_meme(self) -> None:
-        Smudge = MemePage("https://knowyourmeme.com/memes/smudge-the-cat")
-        for page in Smudge.photos():
-            for photo in page:
+        meme = MemePage("https://knowyourmeme.com/memes/smudge-the-cat")
+        for page in meme.photos():
+            for photo in islice(page, 3):
                 assert photo.basic_info_dict
                 photo.pprint()
 

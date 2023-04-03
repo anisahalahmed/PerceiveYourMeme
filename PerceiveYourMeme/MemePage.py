@@ -9,7 +9,7 @@ from .CONST import DEFAULT_DOWNLOAD_PATH, HEADERS, KYM
 from .PhotoPage import PhotoPage
 
 
-def isValid(url):
+def isValid(url: str) -> bool:
     if "https://knowyourmeme.com/memes/" in url:
         http = urllib3.PoolManager()
         response = http.request("GET", url, headers=HEADERS)
@@ -104,13 +104,13 @@ class MemePage:
             self.basic_info_dict = {}
             self.org_img_urls = []
 
-    def pprint(self):
+    def pprint(self) -> None:
         # Pretty print of basic_info_dict
         from json import dumps
 
         print(dumps(self.basic_info_dict, indent=3))
 
-    def download_origin_image(self, custom_path=DEFAULT_DOWNLOAD_PATH):
+    def download_origin_image(self, custom_path: str = DEFAULT_DOWNLOAD_PATH) -> bool:
         # Download images
         # then name them corresponding to self.basic_info_dict['Name']
         # Use attributes self.org_img_urls

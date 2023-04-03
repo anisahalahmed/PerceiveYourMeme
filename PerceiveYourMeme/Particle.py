@@ -1,7 +1,9 @@
 # An easter egg
+from io import BytesIO
+
 import urllib3
 from PIL import Image
-from io import BytesIO
+
 from .CONST import HEADERS
 
 # I intentionally do this in one line.
