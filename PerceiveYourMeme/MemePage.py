@@ -161,7 +161,7 @@ class MemePage:
     def get_org_img_urls(self):
         return self.org_img_urls
 
-    def photos(self, sort: str = "newest", page_index=1) -> Iterable[PhotoPage]:
+    def photos(self, sort: str = "newest", page_index=1) -> list[str]:
         """
         Get photos associated with this meme
 
@@ -184,7 +184,7 @@ class MemePage:
 
         tag_a_list = photo_gallery.find_all("a", attrs={"class": "photo"})
         url_list = [urljoin(KYM, tag_a["href"]) for tag_a in tag_a_list]
-        return map(PhotoPage, url_list)
+        return url_list
 
 
 if __name__ == "__main__":

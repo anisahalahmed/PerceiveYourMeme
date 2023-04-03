@@ -70,23 +70,23 @@ class Test(unittest.TestCase):
                 news.pprint()
 
     def test_get_memes(self) -> None:
-        for meme in islice(get_memes(), 3):
+        for meme in map(MemePage, get_memes()[:3]):
             assert meme.basic_info_dict
             meme.pprint()
 
     def test_get_images(self) -> None:
-        for photo in islice(get_photos(), 3):
+        for photo in map(PhotoPage, get_photos()[:3]):
             assert photo.basic_info_dict
             photo.pprint()
 
     def test_get_news(self) -> None:
-        for news in islice(get_news(), 3):
+        for news in map(NewsPage, get_news()[:3]):
             assert news.info_dict
             news.pprint()
 
     def test_get_images_for_meme(self) -> None:
         meme = MemePage("https://knowyourmeme.com/memes/smudge-the-cat")
-        for photo in islice(meme.photos(), 3):
+        for photo in map(PhotoPage, meme.photos()[:3]):
             assert photo.basic_info_dict
             photo.pprint()
 

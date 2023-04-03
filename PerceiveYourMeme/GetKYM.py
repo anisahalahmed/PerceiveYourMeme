@@ -21,7 +21,7 @@ def get_soup(url: str) -> bs4.BeautifulSoup:
     return soup
 
 
-def get_memes(directory: str = "confirmed", page_index: int = 1, sort: str = "newest") -> Iterable[MemePage]:
+def get_memes(directory: str = "confirmed", page_index: int = 1, sort: str = "newest") -> list[str]:
     """
     Returns a list of MemePage objects
 
@@ -43,10 +43,10 @@ def get_memes(directory: str = "confirmed", page_index: int = 1, sort: str = "ne
     )
     url_list = [urljoin(KYM, tag_a["href"]) for tag_a in tag_a_list]
 
-    return map(MemePage, url_list)
+    return url_list
 
 
-def get_photos(directory: str = "", page_index: int = 1) -> Iterable[PhotoPage]:
+def get_photos(directory: str = "", page_index: int = 1) -> list[str]:
     # directory : '' or 'trending' or 'most-commented'
     # page_index : a positive integer
     # To return a list of PhotoPage objects
@@ -68,10 +68,10 @@ def get_photos(directory: str = "", page_index: int = 1) -> Iterable[PhotoPage]:
     tag_a_list = cast(bs4.Tag, soup.find("div", attrs={"id": "photo_gallery"})).find_all("a", attrs={"class": "photo"})
     url_list = [urljoin(KYM, tag_a["href"]) for tag_a in tag_a_list]
 
-    return map(PhotoPage, url_list)
+    return url_list
 
 
-def get_news(page_index: int = 1) -> Iterable[NewsPage]:
+def get_news(page_index: int = 1) -> list[str]:
     # page_index : a positive integer
     # To return a list of NewsPage objects
     if page_index < 1:
@@ -86,4 +86,4 @@ def get_news(page_index: int = 1) -> Iterable[NewsPage]:
         for h1 in cast(bs4.Tag, soup.find("div", attrs={"id": "maru"})).find_all("div")[1].find_all("h1")
     ]
 
-    return map(NewsPage, url_list)
+    return url_list
