@@ -7,18 +7,9 @@ from .MemePage import MemePage
 from .PhotoPage import PhotoPage
 from .NewsPage import NewsPage
 
+
 def url_maker(context, page_index, query, sort):
-    return (
-        KYM
-        + "/search?context="
-        + context
-        + "&page="
-        + str(page_index)
-        + "&q="
-        + query
-        + "&sort="
-        + sort
-    )
+    return KYM + "/search?context=" + context + "&page=" + str(page_index) + "&q=" + query + "&sort=" + sort
 
 
 class SearchEntry:
@@ -157,16 +148,10 @@ class SearchEngine:
             return None
         else:
             if self.context == "entries":
-                return SearchEntry(
-                    query=self.query, max_pages=self.max_pages, sort=self.sort
-                )
+                return SearchEntry(query=self.query, max_pages=self.max_pages, sort=self.sort)
 
             if self.context == "images":
-                return SearchImage(
-                    query=self.query, max_pages=self.max_pages, sort=self.sort
-                )
+                return SearchImage(query=self.query, max_pages=self.max_pages, sort=self.sort)
 
             if self.context == "news":
-                return SearchNews(
-                    query=self.query, max_pages=self.max_pages, sort=self.sort
-                )
+                return SearchNews(query=self.query, max_pages=self.max_pages, sort=self.sort)

@@ -5,5 +5,5 @@ from io import BytesIO
 from .CONST import HEADERS
 
 # I intentionally do this in one line.
-url = 'https://vignette.wikia.nocookie.net/marvelcinematicuniverse/images/0/03/Pym_Particles.png'
-Image.open(BytesIO(urllib3.PoolManager().request('GET',url,headers=HEADERS).data)).show()
+url = "https://vignette.wikia.nocookie.net/marvelcinematicuniverse/images/0/03/Pym_Particles.png"
+Image.open(BytesIO(urllib3.PoolManager().request("GET", url, headers=HEADERS).data)).show()

@@ -38,9 +38,7 @@ def get_memes(directory="", page_index=1, sort=""):
 
     soup = get_soup(url)
 
-    tag_a_list = soup.find("table", attrs={"class": "entry_list"}).find_all(
-        "a", attrs={"class": "photo"}
-    )
+    tag_a_list = soup.find("table", attrs={"class": "entry_list"}).find_all("a", attrs={"class": "photo"})
     url_list = [urljoin(KYM, tag_a["href"]) for tag_a in tag_a_list]
 
     return [MemePage(u_r_l) for u_r_l in url_list]
@@ -65,9 +63,7 @@ def get_photos(directory="", page_index=1):
 
     soup = get_soup(url)
 
-    tag_a_list = soup.find("div", attrs={"id": "photo_gallery"}).find_all(
-        "a", attrs={"class": "photo"}
-    )
+    tag_a_list = soup.find("div", attrs={"id": "photo_gallery"}).find_all("a", attrs={"class": "photo"})
     url_list = [urljoin(KYM, tag_a["href"]) for tag_a in tag_a_list]
 
     return [PhotoPage(u_r_l) for u_r_l in url_list]
@@ -85,9 +81,7 @@ def get_news(page_index=1):
 
     url_list = [
         urljoin(KYM, h1.find("a")["href"])
-        for h1 in soup.find("div", attrs={"id": "maru"})
-        .find_all("div")[1]
-        .find_all("h1")
+        for h1 in soup.find("div", attrs={"id": "maru"}).find_all("div")[1].find_all("h1")
     ]
 
     return [NewsPage(u_r_l) for u_r_l in url_list]

@@ -97,9 +97,7 @@ class MemePage:
             for org_img_url in self.org_img_urls:
                 response = http.request("GET", org_img_url, HEADERS)
                 file_type = response.headers["Content-Type"].split("/")[-1]
-                fname_path = (
-                    DEFAULT_DOWNLOAD_PATH + self.basic_info_dict["Name"] + " " + str(i)
-                )
+                fname_path = DEFAULT_DOWNLOAD_PATH + self.basic_info_dict["Name"] + " " + str(i)
                 with open(fname_path + "." + file_type, "wb") as f:
                     f.write(response.data)
 
@@ -136,7 +134,7 @@ class MemePage:
         PhotoPageList: list[list[PhotoPage]] = []
 
         for page_index in range(1, max_pages + 1):
-            url = f'{self.url}/photos/sort/{sort}/page/{page_index}'
+            url = f"{self.url}/photos/sort/{sort}/page/{page_index}"
             response = http.request("GET", url, headers=HEADERS)
             soup = bs4.BeautifulSoup(response.data, "html.parser")
 

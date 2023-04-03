@@ -13,9 +13,7 @@ class Test(unittest.TestCase):
         Smudge.download_origin_image()
 
     def test_image_page(self):
-        OneRace = PhotoPage(
-            "https://knowyourmeme.com/photos/1894354-nordic-mediterranean"
-        )
+        OneRace = PhotoPage("https://knowyourmeme.com/photos/1894354-nordic-mediterranean")
         assert OneRace.basic_info_dict
         OneRace.pprint()
         OneRace.download_photo()
@@ -29,9 +27,7 @@ class Test(unittest.TestCase):
         Mia.download_head_img()
 
     def test_video_page(self):
-        western_animation = VideoPage(
-            "https://knowyourmeme.com/videos/225020-western-animation"
-        )
+        western_animation = VideoPage("https://knowyourmeme.com/videos/225020-western-animation")
         assert western_animation.basic_info_dict
         western_animation.pprint()
 
