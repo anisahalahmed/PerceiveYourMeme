@@ -4,10 +4,11 @@ __pycache__
 .pytest_cache
 PyM-venv
 PyM-trial
-build
-test_outputs
 PerceiveYourMeme.egg-info
 .vscode
+build
+test_outputs
+data
 
 # Ignore files
 *.bat

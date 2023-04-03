@@ -1,12 +1,12 @@
 import os
-from typing import Iterable, Iterator, TypedDict, cast
+from json import dumps
+from typing import TypedDict, cast
 from urllib.parse import urljoin
 
 import bs4
 import urllib3
 
 from .CONST import DEFAULT_DOWNLOAD_PATH, HEADERS, KYM
-from .PhotoPage import PhotoPage
 
 
 def isValid(url: str) -> bool:
@@ -24,6 +24,7 @@ MemeInfo = TypedDict(
     {
         "Title": str,
         "Meme url": str,
+        "Header image url": str,
         "Name": str,
         "Unit": str,
         "Status": str,
@@ -33,7 +34,6 @@ MemeInfo = TypedDict(
         "Tags": list[str],
         "Origin": list[str],
         "Region": list[str],
-        "Template urls": list[str],
         "Body photos": dict[str, list[str]],
     },
     total=False,
@@ -50,7 +50,7 @@ class MemePage:
             self.basic_info_dict["Meme url"] = url
 
             # Name meme
-            self.basic_info_dict["Name"] = url.split("/")[-1].replace("-", " ")
+            self.basic_info_dict["Name"] = url.split("/")[-1]
 
             # Get the html document. This can be slow due to the internet
             http = urllib3.PoolManager()
@@ -58,7 +58,10 @@ class MemePage:
             soup = bs4.BeautifulSoup(response.data, "html.parser")
             try:
                 entry_body = cast(bs4.Tag, soup.find("div", attrs={"class": "c", "id": "entry_body"}))
-                title = cast(bs4.Tag, cast(bs4.Tag, soup.find("div", attrs={"id": "maru"})).find("h1"))
+                header = cast(bs4.Tag, soup.find("div", attrs={"id": "maru"})).header
+                if header:
+                    title = cast(bs4.Tag, header.find("h1"))
+                    self.basic_info_dict["Header image url"] = str(header.img["src"]) if header.img else ""
 
                 # Get basic information and entry tags from entry body
                 info_dl = cast(bs4.Tag, entry_body.find("dl"))
@@ -94,12 +97,12 @@ class MemePage:
                     imgs = cast(bs4.Tag, entry_body.find("center")).find_all("img")
                     self.org_img_urls = [ele["data-src"] for ele in imgs]
 
-                # Store url to basic_info_dict
-                self.basic_info_dict["Template urls"] = self.org_img_urls
                 section = ""
-                photos = []
+                photos: list[str] = []
                 body_photos: dict[str, list[str]] = {}
-                for ele in entry_body.find("section", attrs={"class": "bodycopy"}).find_all(recursive=False):
+                for ele in cast(bs4.Tag, entry_body.find("section", attrs={"class": "bodycopy"})).find_all(
+                    recursive=False
+                ):
                     if ele.name == "h2":
                         if photos:
                             body_photos[section] = photos
@@ -122,10 +125,26 @@ class MemePage:
             self.org_img_urls = []
 
     def pprint(self) -> None:
-        # Pretty print of basic_info_dict
-        from json import dumps
-
         print(dumps(self.basic_info_dict, indent=3))
+
+    def save_json(self, custom_path: str = DEFAULT_DOWNLOAD_PATH):
+        fname_path = os.path.join(custom_path, self.basic_info_dict["Name"])
+        with open(fname_path + ".json", "w", encoding="utf-8") as f:
+            f.write(dumps(self.basic_info_dict, indent=2))
+
+    def download_header_image(self, custom_path: str = DEFAULT_DOWNLOAD_PATH) -> bool:
+        # Download images
+        # then name them corresponding to self.basic_info_dict['Name']
+        # Use attributes self.org_img_urls
+        http = urllib3.PoolManager()
+        url = self.basic_info_dict["Header image url"]
+        response = http.request("GET", url, HEADERS)
+        _, ext = os.path.splitext(urllib3.util.parse_url(url).path or "")
+        fname_path = os.path.join(custom_path, self.basic_info_dict["Name"])
+        with open(fname_path + ext, "wb") as f:
+            f.write(response.data)
+
+        return True
 
     def download_origin_image(self, custom_path: str = DEFAULT_DOWNLOAD_PATH) -> bool:
         # Download images

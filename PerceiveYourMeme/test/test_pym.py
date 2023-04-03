@@ -17,6 +17,7 @@ class Test(unittest.TestCase):
         page = MemePage("https://knowyourmeme.com/memes/smudge-the-cat")
         page.pprint()
         page.download_origin_image(output_folder)
+        page.download_header_image(output_folder)
         assert "woman yelling at a cat" in page.basic_info_dict["Tags"]
 
     def test_nsfw_meme(self) -> None:

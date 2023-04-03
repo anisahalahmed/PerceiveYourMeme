@@ -9,9 +9,6 @@ import bs4
 import urllib3
 
 from .CONST import *
-from .MemePage import MemePage
-from .NewsPage import NewsPage
-from .PhotoPage import PhotoPage
 
 
 def get_soup(url: str) -> bs4.BeautifulSoup:

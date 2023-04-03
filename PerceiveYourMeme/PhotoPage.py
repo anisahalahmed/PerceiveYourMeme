@@ -1,12 +1,13 @@
 import os
 from json import dumps
 from typing import TypedDict, cast
+from urllib.parse import urljoin
 
 import bs4
 import urllib3
 from dateutil.parser import parse
 
-from .CONST import DEFAULT_DOWNLOAD_PATH, HEADERS
+from .CONST import DEFAULT_DOWNLOAD_PATH, HEADERS, KYM
 
 
 def isValid(url):
@@ -27,6 +28,7 @@ PhotoInfo = TypedDict(
         "Name": str,
         "Title": str,
         "Meme": str,
+        "Meme url": str,
         "Uploaded": int,
         "Tags": list[str],
         "Original url": str,
@@ -55,7 +57,9 @@ class PhotoPage:
 
             heading = cast(bs4.Tag, soup.find("h1", attrs={"id": "media-title"}))
             meme = heading.a.text.strip() if heading.a else ""
+            meme_url = urljoin(KYM, str(heading.a["href"])) if heading.a else ""
             self.basic_info_dict["Meme"] = meme
+            self.basic_info_dict["Meme url"] = meme_url
             self.basic_info_dict["Title"] = heading.text.replace(meme, "", 1).strip().removeprefix("-").strip()
 
             dl_entry = cast(bs4.Tag, soup.find("p", attrs={"id": "tag_list"})).find_all("a", attrs={"data-tag": True})
@@ -84,6 +88,12 @@ class PhotoPage:
 
         print(dumps(self.basic_info_dict, indent=3))
 
+    def save_json(self, custom_path=DEFAULT_DOWNLOAD_PATH):
+        photo_path = os.path.join(custom_path, self.basic_info_dict["Id"] + ".json")
+
+        with open(photo_path, "w", encoding="utf-8") as f:
+            f.write(dumps(self.basic_info_dict, indent=2))
+
     def download_photo(self, custom_path=DEFAULT_DOWNLOAD_PATH):
         # type: (str) -> None
         """Download photo from given url custom_path/Photo name
@@ -92,19 +102,15 @@ class PhotoPage:
 
         if self.basic_info_dict["Direct photo url"]:
             http = urllib3.PoolManager()
-            response = http.request("GET", self.basic_info_dict["Direct photo url"], headers=HEADERS)
+            url = self.basic_info_dict["Direct photo url"]
+            response = http.request("GET", url, headers=HEADERS)
             if response.status == 200:
-                file_type = response.headers["Content-Type"].split("/")[-1]
+                _, ext = os.path.splitext(urllib3.util.parse_url(url).path or "")
 
-                if self.basic_info_dict["Name"]:
-                    fname_path = os.path.join(custom_path, self.basic_info_dict["Name"].replace(" ", "_"))
-                else:
-                    fname_path = os.path.join(custom_path, self.basic_info_dict["Id"])
+                photo_path = os.path.join(custom_path, self.basic_info_dict["Id"] + ext)
 
-                photo_path = "".join([fname_path, ".", file_type])
                 with open(photo_path, "wb") as f:
                     f.write(response.data)
-                    print(f"Photo downloaded to {photo_path}")
         else:
             print("Dir photo url is missing or invalid")
 
