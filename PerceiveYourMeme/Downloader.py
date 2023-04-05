@@ -4,6 +4,8 @@ import shutil
 import signal
 from time import time
 
+from PerceiveYourMeme.Request import NotFoundException
+
 from .GetKYM import get_memes
 from .MemePage import MemePage
 from .PhotoPage import PhotoPage
@@ -128,47 +130,53 @@ while memes and memes_downloaded < download_count and check_free_space():
     print(round(time() - start_time), "seconds: downloading page", page_index)
     memes = get_memes(category=args.category, directory=args.directory, page_index=page_index, sort=args.sort)
     for m, meme_url in enumerate(memes, 1):
-        if meme_url in processed:
-            continue
-        print(round(time() - start_time), "seconds: downloading meme", f"{m}/{len(memes)}", meme_url)
-        page = MemePage(meme_url)
-        page.download_header_image(meme_folder)
-        page.save_json(meme_folder)
-
-        article_images = (
-            [item for items in page.basic_info_dict["Body photos"].values() for item in items]
-            if args.article_images
-            else []
-        )
-        recent_photos = page.basic_info_dict["Recent photos"]
-        page_photos = (
-            page.photos(args.images)
-            if args.images and len(recent_photos) < page.basic_info_dict["Total photos"]
-            else []
-        )
-        for image_url, i, type in (
-            enum(recent_photos, "recent") + enum(page_photos, args.images) + enum(article_images, "article")
-        ):
-            canonical_url = KYM + "/photos/" + image_url.split("/")[-1].split("-")[0]
-            if canonical_url in processed:
+        try:
+            if meme_url in processed:
                 continue
-            print(
-                round(time() - start_time),
-                "seconds: downloading",
-                type,
-                "image",
-                i,
-                image_url,
-            )
-            image = PhotoPage(image_url)
-            dir = os.path.join(image_folder, page.basic_info_dict["Name"])
-            os.makedirs(dir, exist_ok=True)
-            image.download_photo(dir)
-            image.save_json(dir)
-            save_processed(canonical_url)
+            print(round(time() - start_time), "seconds: downloading meme", f"{m}/{len(memes)}", meme_url)
+            page = MemePage(meme_url)
+            page.download_header_image(meme_folder)
+            page.save_json(meme_folder)
 
+            article_images = (
+                [item for items in page.basic_info_dict["Body photos"].values() for item in items]
+                if args.article_images
+                else []
+            )
+            recent_photos = page.basic_info_dict["Recent photos"]
+            page_photos = (
+                page.photos(args.images)
+                if args.images and len(recent_photos) < page.basic_info_dict["Total photos"]
+                else []
+            )
+            for image_url, i, type in (
+                enum(recent_photos, "recent") + enum(page_photos, args.images) + enum(article_images, "article")
+            ):
+                try:
+                    canonical_url = KYM + "/photos/" + image_url.split("/")[-1].split("-")[0]
+                    if canonical_url in processed:
+                        continue
+                    print(
+                        round(time() - start_time),
+                        "seconds: downloading",
+                        type,
+                        "image",
+                        i,
+                        image_url,
+                    )
+                    image = PhotoPage(image_url)
+                    dir = os.path.join(image_folder, page.basic_info_dict["Name"])
+                    os.makedirs(dir, exist_ok=True)
+                    image.download_photo(dir)
+                    image.save_json(dir)
+                except NotFoundException:
+                    print("404")
+                save_processed(canonical_url)
+
+            memes_downloaded = memes_downloaded + 1
+            if memes_downloaded >= download_count:
+                break
+        except NotFoundException:
+            print("404")
         save_processed(meme_url)
-        memes_downloaded = memes_downloaded + 1
-        if memes_downloaded >= download_count:
-            break
     page_index = page_index + 1

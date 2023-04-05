@@ -26,12 +26,23 @@ http = session()
 http.headers.update(HEADERS)
 
 
+class NotFoundException(Exception):
+    pass
+
+
 def get(url: str) -> Response:
+    sleep(30)
     for i in range(4):
-        sleep(30 + randint(0, 10000) / 1000.0)
-        res = http.get(url)
-        if not res or res.status_code >= 400:
-            print("error", i, res.status_code, res.text)
+        sleep(randint(1000, 8000) / 1000.0)
+        try:
+            res = http.get(url, timeout=10)
+        except Exception as e:
+            print("error", e, "retries", i)
+            continue
+        if res.status_code == 404:
+            raise NotFoundException
+        elif res.status_code >= 400:
+            print("error", res.status_code, "retries", i, "response", res.text)
         else:
             return res
 
