@@ -2,17 +2,15 @@ import os
 from typing import cast
 
 import bs4
+from urllib3.util import parse_url
 
-from .CONST import DEFAULT_DOWNLOAD_PATH, HEADERS, request
+from .CONST import DEFAULT_DOWNLOAD_PATH
+from .Request import get
 
 
 class NewsPage:
     def isValid(self, url: str) -> bool:
-        if "/news" in url:
-            response = request("GET", url, headers=HEADERS)
-            return response.status == 200
-        else:
-            return False
+        return "knowyourmem.com/news" in url
 
     # An object to store a news articles
     def __init__(self, url: str) -> None:
@@ -22,8 +20,8 @@ class NewsPage:
             self.info_dict["News url"] = url
 
             # Get the html document. This can be slow due to the internet
-            response = request("GET", url, headers=HEADERS)
-            soup = bs4.BeautifulSoup(response.data, "html.parser")
+            response = get(url)
+            soup = bs4.BeautifulSoup(response.text, "html.parser")
 
             try:
                 # Get the super_header information
@@ -66,12 +64,13 @@ class NewsPage:
         # then name them corresponding to self.info_dict['Head']
         # Use attributes self.head_img_url
         if isinstance(self.head_img_url, str):
-            response = request("GET", self.head_img_url, headers=HEADERS)
-            if response.status == 200:
-                file_type = response.headers["Content-Type"].split("/")[-1]
+            response = get(self.head_img_url)
+            if response.status_code == 200:
+                _, ext = os.path.splitext(parse_url(self.head_img_url).path or "")
+                ext = ext or "." + response.headers["Content-Type"].split("/")[-1]
                 fname_path = os.path.join(custom_path, self.info_dict["Heading"])
-                with open(fname_path + "." + file_type, "wb") as f:
-                    f.write(response.data)
+                with open(fname_path + ext, "wb") as f:
+                    f.write(response.content)
 
                 return True
 

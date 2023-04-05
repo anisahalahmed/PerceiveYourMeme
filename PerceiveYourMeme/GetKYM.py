@@ -7,16 +7,17 @@ from urllib.parse import urljoin
 
 import bs4
 
-from .CONST import HEADERS, KYM, KYM_HASH, PHOTOS_HASH, request
+from .CONST import KYM, KYM_HASH, PHOTOS_HASH
+from .Request import get
 
 
 def get_soup(url: str) -> bs4.BeautifulSoup:
-    response = request("GET", url, headers=HEADERS)
-    soup = bs4.BeautifulSoup(response.data, "html.parser")
+    response = get(url)
+    soup = bs4.BeautifulSoup(response.text, "html.parser")
     return soup
 
 
-def get_memes(directory: str = "confirmed", page_index: int = 1, sort: str = "newest") -> list[str]:
+def get_memes(category: str = "", directory: str = "confirmed", page_index: int = 1, sort: str = "newest") -> list[str]:
     """
     Returns a list of MemePage objects
 
@@ -29,7 +30,11 @@ def get_memes(directory: str = "confirmed", page_index: int = 1, sort: str = "ne
     if page_index < 1:
         page_index = 1
 
-    url = KYM_HASH["memes"] + directory + "/page/" + str(page_index) + "?sort=" + sort
+    url = (
+        KYM_HASH["category"] + category + "/page/" + str(page_index) + "?status=" + directory + "&sort=" + sort
+        if category
+        else KYM_HASH["memes"] + directory + "/page/" + str(page_index) + "?sort=" + sort
+    )
 
     soup = get_soup(url)
 

@@ -7,17 +7,14 @@ from urllib3.util import parse_url
 import bs4
 from dateutil.parser import parse
 
-from .CONST import DEFAULT_DOWNLOAD_PATH, HEADERS, KYM, request
+from .CONST import DEFAULT_DOWNLOAD_PATH, KYM
+from .Request import get
 
 
 def isValid(url):
     # type: (str) -> bool
     """Checks if given url is a valid know your meme photo url"""
-
-    if "https://knowyourmeme.com/photos/" in url:
-        response = request("GET", url, headers=HEADERS)
-        return response.status == 200
-    return False
+    return "knowyourmeme.com/photos/" in url
 
 
 PhotoInfo = TypedDict(
@@ -50,8 +47,8 @@ class PhotoPage:
             self.basic_info_dict["Name"] = " ".join(id_name[1:])
 
             # Get soup. Can be slow due to internet speeds
-            response = request("GET", url, headers=HEADERS)
-            soup = bs4.BeautifulSoup(response.data, "html.parser")
+            response = get(url)
+            soup = bs4.BeautifulSoup(response.text, "html.parser")
 
             heading = cast(bs4.Tag, soup.find("h1", attrs={"id": "media-title"}))
             meme = heading.a.text.strip() if heading.a else ""
@@ -98,18 +95,19 @@ class PhotoPage:
         If no name is available, the photo is named after its ID instead
         """
 
-        if self.basic_info_dict["Direct photo url"]:
+        if "Direct photo url" in self.basic_info_dict:
             url = self.basic_info_dict["Direct photo url"]
-            response = request("GET", url, headers=HEADERS)
-            if response.status == 200:
+            response = get(url)
+            if response.status_code == 200:
                 _, ext = os.path.splitext(parse_url(url).path or "")
+                ext = ext or "." + response.headers["Content-Type"].split("/")[-1]
 
                 photo_path = os.path.join(custom_path, self.basic_info_dict["Id"] + ext)
 
                 with open(photo_path, "wb") as f:
-                    f.write(response.data)
+                    f.write(response.content)
         else:
-            print("Dir photo url is missing or invalid")
+            print("Direct photo url is missing or invalid", dumps(self.basic_info_dict))
 
 
 if __name__ == "__main__":

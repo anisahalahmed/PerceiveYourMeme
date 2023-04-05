@@ -1,14 +1,10 @@
 import bs4
 
-from .CONST import HEADERS, request
+from .Request import get
 
 
 def isValid(url: str) -> bool:
-    if url.startswith("https://knowyourmeme.com/videos/"):
-        response = request("GET", url, headers=HEADERS)
-
-        return response.status == 200
-    return False
+    return "knowyourmeme.com/videos/" in url
 
 
 class VideoPage:
@@ -27,8 +23,8 @@ class VideoPage:
             self.basic_info_dict["Name"] = " ".join(id_name[1:])
 
             # Get soup
-            response = request("GET", url, headers=HEADERS)
-            soup = bs4.BeautifulSoup(response.data, "html.parser")
+            response = get(url)
+            soup = bs4.BeautifulSoup(response.text, "html.parser")
 
     def pprint(self) -> None:
         """Pretty print of self.basic_info_dict"""

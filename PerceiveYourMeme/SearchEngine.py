@@ -3,10 +3,11 @@ from urllib.parse import urljoin
 
 import bs4
 
-from .CONST import HEADERS, KYM, request
+from .CONST import KYM
 from .MemePage import MemePage
 from .NewsPage import NewsPage
 from .PhotoPage import PhotoPage
+from .Request import get
 
 
 def url_maker(context: str, page_index: int, query: str, sort: str):
@@ -28,8 +29,8 @@ class SearchEntry:
 
         for page_index in range(1, self.max_pages + 1):
             url = url_maker("entries", page_index, self.query, self.sort)
-            response = request("GET", url, headers=HEADERS)
-            soup = bs4.BeautifulSoup(response.data, "html.parser")
+            response = get(url)
+            soup = bs4.BeautifulSoup(response.text, "html.parser")
 
             headers3 = cast(bs4.Tag, soup.find("div", attrs={"id": "entries"})).find("h3")
             if headers3 is not None:
@@ -61,8 +62,8 @@ class SearchImage:
 
         for page_index in range(1, self.max_pages + 1):
             url = url_maker("images", page_index, self.query, self.sort)
-            response = request("GET", url, headers=HEADERS)
-            soup = bs4.BeautifulSoup(response.data, "html.parser")
+            response = get(url)
+            soup = bs4.BeautifulSoup(response.text, "html.parser")
 
             entries = cast(bs4.Tag, soup.find("div", attrs={"id": "entries"}))
             if entries.find("h3") is not None:
@@ -91,8 +92,8 @@ class SearchNews:
 
         for page_index in range(1, self.max_pages + 1):
             url = url_maker("news", page_index, self.query, self.sort)
-            response = request("GET", url, headers=HEADERS)
-            soup = bs4.BeautifulSoup(response.data, "html.parser")
+            response = get(url)
+            soup = bs4.BeautifulSoup(response.text, "html.parser")
 
             headers3 = cast(bs4.Tag, soup.find("div", attrs={"id": "entries"})).h3
             if headers3 is not None:

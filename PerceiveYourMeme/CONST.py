@@ -3,6 +3,7 @@ KYM = "https://knowyourmeme.com"
 
 KYM_HASH = {
     "memes": "https://knowyourmeme.com/memes/",
+    "category": "https://knowyourmeme.com/categories/",
     "photos": "https://knowyourmeme.com/photos/page/",
     "news": "https://knowyourmeme.com/news/page/",
 }
@@ -26,24 +27,7 @@ PHOTOS_HASH = {
 # Why don't PHOTOS_HASH have PHOTOS_SORT_HASH likes MEMES_HASH?
 # Because KYM developers treat sort just like sub-directories
 
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36 Edg/85.0.564.44"
-}
-# User-Agent headers
-# This HEADERS can be achived by going to this link
-# https://www.whatismybrowser.com/detect/what-is-my-user-agent
-# If you are smart and have time, https://developers.whatismybrowser.com/api/
-
 DEFAULT_DOWNLOAD_PATH = ""
 # Define default download path
 # This depends on OS
 # If you are smart and have time, https://stackoverflow.com/questions/35851281/python-finding-the-users-downloads-folder
-
-from urllib3 import PoolManager
-from pyrate_limiter import Duration, RequestRate, Limiter
-
-limiter = Limiter(RequestRate(60, Duration.MINUTE))
-
-http = PoolManager()
-
-request = limiter.ratelimit(delay=True)(http.request)

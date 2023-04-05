@@ -6,16 +6,12 @@ from urllib.parse import urljoin
 import bs4
 from urllib3.util import parse_url
 
-from .CONST import DEFAULT_DOWNLOAD_PATH, HEADERS, KYM, request
+from .CONST import DEFAULT_DOWNLOAD_PATH, KYM
+from .Request import get
 
 
 def isValid(url: str) -> bool:
-    if "https://knowyourmeme.com/memes/" in url:
-        response = request("GET", url, headers=HEADERS)
-        return response.status == 200
-
-    else:
-        return False
+    return "knowyourmeme.com/memes/" in url
 
 
 MemeInfo = TypedDict(
@@ -52,8 +48,8 @@ class MemePage:
             self.basic_info_dict["Name"] = url.split("/")[-1]
 
             # Get the html document. This can be slow due to the internet
-            response = request("GET", url, headers=HEADERS)
-            soup = bs4.BeautifulSoup(response.data, "html.parser")
+            response = get(url)
+            soup = bs4.BeautifulSoup(response.text, "html.parser")
             try:
                 entry_body = cast(bs4.Tag, soup.find("div", attrs={"class": "c", "id": "entry_body"}))
                 header = cast(bs4.Tag, soup.find("div", attrs={"id": "maru"})).header
@@ -135,11 +131,12 @@ class MemePage:
         # then name them corresponding to self.basic_info_dict['Name']
         # Use attributes self.org_img_urls
         url = self.basic_info_dict["Header image url"]
-        response = request("GET", url, HEADERS)
+        response = get(url)
         _, ext = os.path.splitext(parse_url(url).path or "")
+        ext = ext or "." + response.headers["Content-Type"].split("/")[-1]
         fname_path = os.path.join(custom_path, self.basic_info_dict["Name"])
         with open(fname_path + ext, "wb") as f:
-            f.write(response.data)
+            f.write(response.content)
 
         return True
 
@@ -150,11 +147,12 @@ class MemePage:
         if len(self.org_img_urls) > 0:
             i = 0
             for org_img_url in self.org_img_urls:
-                response = request("GET", org_img_url, HEADERS)
-                file_type = response.headers["Content-Type"].split("/")[-1]
+                response = get(org_img_url)
+                _, ext = os.path.splitext(parse_url(org_img_url).path or "")
+                ext = ext or "." + response.headers["Content-Type"].split("/")[-1]
                 fname_path = os.path.join(custom_path, self.basic_info_dict["Name"] + " " + str(i))
-                with open(fname_path + "." + file_type, "wb") as f:
-                    f.write(response.data)
+                with open(fname_path + ext, "wb") as f:
+                    f.write(response.content)
 
                 i += 1
 
@@ -184,8 +182,8 @@ class MemePage:
         """
 
         url = f"{self.url}/photos/sort/{sort}/page/{page_index}"
-        response = request("GET", url, headers=HEADERS)
-        soup = bs4.BeautifulSoup(response.data, "html.parser")
+        response = get(url)
+        soup = bs4.BeautifulSoup(response.text, "html.parser")
 
         entries = soup.find("div", attrs={"id": "entries"})
         if entries and entries.find("h3") is not None:
