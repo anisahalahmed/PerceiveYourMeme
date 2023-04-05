@@ -27,11 +27,12 @@ http.headers.update(HEADERS)
 
 
 def get(url: str) -> Response:
-    sleep(30 + randint(0, 10000) / 1000.0)
-    res = http.get(url)
+    for i in range(4):
+        sleep(30 + randint(0, 10000) / 1000.0)
+        res = http.get(url)
+        if not res or res.status_code >= 400:
+            print("error", i, res.status_code, res.text)
+        else:
+            return res
 
-    if not res or res.status_code >= 400:
-        print("error", res.status_code, res.text)
-        raise Exception()
-
-    return res
+    raise Exception()

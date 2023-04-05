@@ -101,6 +101,10 @@ gb = 1 << 30
 start_time = time()
 
 
+def enum(list: list[str], name: str):
+    return [(item, f"{index}/{len(list)}", name) for index, item in enumerate(list, 1)]
+
+
 def check_free_space():
     if not args.free:
         return True
@@ -121,32 +125,46 @@ memes_downloaded = 0
 page_index = int(args.page)
 memes = ["memes"]
 while memes and memes_downloaded < download_count and check_free_space():
+    print(round(time() - start_time), "seconds: downloading page", page_index)
     memes = get_memes(category=args.category, directory=args.directory, page_index=page_index, sort=args.sort)
-    print(round(time() - start_time, 1), "seconds: page", page_index)
-    for i, meme_url in enumerate(memes):
+    for m, meme_url in enumerate(memes, 1):
         if meme_url in processed:
             continue
+        print(round(time() - start_time), "seconds: downloading meme", f"{m}/{len(memes)}", meme_url)
         page = MemePage(meme_url)
         page.download_header_image(meme_folder)
         page.save_json(meme_folder)
-        print(round(time() - start_time, 1), "seconds: meme", f"{i}/{len(memes)}", meme_url)
 
         article_images = (
             [item for items in page.basic_info_dict["Body photos"].values() for item in items]
             if args.article_images
             else []
         )
-        page_photos = page.photos(args.images) if args.images else []
-        for image_url in article_images + page_photos:
+        recent_photos = page.basic_info_dict["Recent photos"]
+        page_photos = (
+            page.photos(args.images)
+            if args.images and len(recent_photos) < page.basic_info_dict["Total photos"]
+            else []
+        )
+        for image_url, i, type in (
+            enum(recent_photos, "recent") + enum(page_photos, args.images) + enum(article_images, "article")
+        ):
             canonical_url = KYM + "/photos/" + image_url.split("/")[-1].split("-")[0]
             if canonical_url in processed:
                 continue
+            print(
+                round(time() - start_time),
+                "seconds: downloading",
+                type,
+                "image",
+                i,
+                image_url,
+            )
             image = PhotoPage(image_url)
             dir = os.path.join(image_folder, page.basic_info_dict["Name"])
             os.makedirs(dir, exist_ok=True)
             image.download_photo(dir)
             image.save_json(dir)
-            print(round(time() - start_time, 1), "seconds", image_url)
             save_processed(canonical_url)
 
         save_processed(meme_url)

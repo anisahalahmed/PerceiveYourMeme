@@ -30,6 +30,8 @@ MemeInfo = TypedDict(
         "Origin": list[str],
         "Region": list[str],
         "Body photos": dict[str, list[str]],
+        "Recent photos": list[str],
+        "Total photos": int,
     },
     total=False,
 )
@@ -109,6 +111,15 @@ class MemePage:
                     body_photos[section] = photos
 
                 self.basic_info_dict["Body photos"] = body_photos
+
+                image_section = cast(bs4.Tag, soup.find("section", attrs={"id": "photos"}))
+                total_photos = image_section.h2.small.text if image_section.h2 and image_section.h2.small else "0"
+                self.basic_info_dict["Total photos"] = int(total_photos.split()[0])
+                recent_photos: list[str] = []
+                for link in image_section.find_all("a", attrs={"class": "photo"}):
+                    if link["href"].startswith("/photos/") or "knowyourmeme.com/photos/" in link["href"]:
+                        recent_photos.append(urljoin(KYM, link["href"]))
+                self.basic_info_dict["Recent photos"] = recent_photos
             except Exception as e:
                 print(e)
                 self.org_img_urls = []
