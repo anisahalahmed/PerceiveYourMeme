@@ -33,9 +33,9 @@ class NotFoundException(Exception):
 
 
 def get(url: str) -> Response:
-    sleep(1)
+    sleep(0.8)
     for i in range(4):
-        sleep(randint(250, 500) / 1000.0)
+        sleep(randint(50, 500) / 1000.0)
         try:
             res = http.get(url, timeout=10)
         except Exception as e:

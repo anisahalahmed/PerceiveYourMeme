@@ -102,7 +102,7 @@ class PhotoPage:
             url = self.basic_info_dict["Direct photo url"]
             response = get(url)
             if response.status_code == 200:
-                _, ext = os.path.splitext(parse_url(url).path or "")
+                ext = self.extension()
                 ext = ext or "." + response.headers["Content-Type"].split("/")[-1]
 
                 photo_path = os.path.join(custom_path, self.basic_info_dict["Id"] + ext)
@@ -117,6 +117,11 @@ class PhotoPage:
                     print(f"Wrote tags to {tag_path}")
         else:
             print("Direct photo url is missing or invalid", dumps(self.basic_info_dict))
+
+    def extension(self):
+        url = self.basic_info_dict["Direct photo url"]
+        _, ext = os.path.splitext(parse_url(url).path or "")
+        return ext
 
 
 if __name__ == "__main__":
