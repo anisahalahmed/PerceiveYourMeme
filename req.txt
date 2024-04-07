@@ -10,3 +10,4 @@ soupsieve
 sqlparse
 urllib3
 fake-useragent
+python-dateutil

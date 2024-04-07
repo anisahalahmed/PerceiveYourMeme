@@ -51,6 +51,9 @@ class PhotoPage:
             soup = bs4.BeautifulSoup(response.text, "html.parser")
 
             heading = cast(bs4.Tag, soup.find("h1", attrs={"id": "media-title"}))
+            if not heading:
+                heading = cast(bs4.Tag, soup.find("h1", attrs={"id": "photo-title"}))
+
             meme = heading.a.text.strip() if heading.a else ""
             meme_url = urljoin(KYM, str(heading.a["href"])) if heading.a else ""
             self.basic_info_dict["Meme"] = meme
@@ -89,7 +92,7 @@ class PhotoPage:
         with open(photo_path, "w", encoding="utf-8") as f:
             f.write(dumps(self.basic_info_dict, indent=2))
 
-    def download_photo(self, custom_path=DEFAULT_DOWNLOAD_PATH):
+    def download_photo(self, custom_path=DEFAULT_DOWNLOAD_PATH, extra_tags=[]):
         # type: (str) -> None
         """Download photo from given url custom_path/Photo name
         If no name is available, the photo is named after its ID instead
@@ -106,6 +109,12 @@ class PhotoPage:
 
                 with open(photo_path, "wb") as f:
                     f.write(response.content)
+                
+                tag_path = os.path.join(custom_path, self.basic_info_dict["Id"] + '.txt')
+                with open(tag_path, 'w') as f:
+                    all_tags = set([*extra_tags, *self.basic_info_dict.get('Tags', [])])
+                    f.write(','.join(all_tags))
+                    print(f"Wrote tags to {tag_path}")
         else:
             print("Direct photo url is missing or invalid", dumps(self.basic_info_dict))
 
